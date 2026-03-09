@@ -19,21 +19,7 @@
   };
 
   function getMockData() {
-    return {
-      residents: {
-        resident_1: { room: '301', name: '陳婆婆', floor: '3/F', socialWorker: '李生', status: '在院舍' },
-        resident_2: { room: '302', name: '黃伯伯', floor: '3/F', socialWorker: '黃姑娘', status: '在院舍' },
-        resident_3: { room: '303', name: '李伯伯', floor: '3/F', socialWorker: '李生', status: '在院舍' },
-        resident_4: { room: '305', name: '孫婆婆', floor: '3/F', socialWorker: '黃姑娘', status: '在院舍' }
-      },
-      handovers: {
-        rows: [
-          { date: '9/3/2026', records: { resident_1: '沒有特別', resident_2: '沒有特別', resident_3: '沒有特別', resident_4: '沒有特別' } },
-          { date: '8/3/2026', records: { resident_1: '精神好，血壓正常', resident_2: '胃口一般', resident_3: '覆診返院', resident_4: '沒有特別' } },
-          { date: '7/3/2026', records: { resident_1: '胃口欠佳', resident_2: '在院舍，精神一般', resident_3: '正常', resident_4: '沒有特別' } }
-        ]
-      }
-    };
+    return { residents: {}, handovers: { rows: [] } };
   }
 
   function fetchData() {
