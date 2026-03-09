@@ -81,13 +81,26 @@
     return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
   }
 
+  /** 將 API 回傳的日期字串轉成 d/M/yyyy 顯示（支援長格式如 Sun Mar 08 2026...） */
+  function normalizeDate(str) {
+    if (!str || typeof str !== 'string') return str || '';
+    var trimmed = str.trim();
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) return trimmed;
+    var d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+    }
+    return trimmed;
+  }
+
   function load() {
     state.loading = true;
-    state.error = null;
+    if (!state.data) state.error = null;
     render();
     fetchData()
       .then(function (data) {
         state.data = data;
+        state.error = null;
         state.loading = false;
         if (!state.selectedId && data.residents && Object.keys(data.residents).length > 0) {
           state.selectedId = Object.keys(data.residents)[0];
@@ -95,8 +108,8 @@
         render();
       })
       .catch(function (err) {
-        state.error = err.message;
         state.loading = false;
+        if (!state.data) state.error = err.message;
         render();
       });
   }
@@ -217,7 +230,8 @@
     var latestBox = document.getElementById('latest-handover');
     if (selectedLatest) {
       latestBox.className = 'latest-box';
-      latestBox.innerHTML = '<p class="text">' + escapeHtml(selectedLatest).replace(/\n/g, '<br>') + '</p><p class="date">' + escapeHtml(handoverRows[0] ? handoverRows[0].date : '') + '</p>';
+      var latestDate = handoverRows[0] ? normalizeDate(handoverRows[0].date) : '';
+      latestBox.innerHTML = '<p class="text">' + escapeHtml(selectedLatest).replace(/\n/g, '<br>') + '</p><p class="date">' + escapeHtml(latestDate) + '</p>';
     } else {
       latestBox.className = 'latest-box empty';
       latestBox.textContent = '尚無交更記錄';
@@ -237,7 +251,7 @@
         return '<div class="timeline-item">' +
           '<span class="timeline-dot"></span>' +
           '<div class="timeline-body">' +
-          '<p class="date">' + escapeHtml(item.date) + '</p>' +
+          '<p class="date">' + escapeHtml(normalizeDate(item.date)) + '</p>' +
           '<p class="text">' + escapeHtml(item.text).replace(/\n/g, '<br>') + '</p>' +
           '</div></div>';
       }).join('');
@@ -281,26 +295,23 @@
       load();
       return;
     }
-    fetch(API_BASE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(function (res) { return res.json().catch(function () { return {} }); })
+    var saveUrl = API_BASE + '?action=save&date=' + encodeURIComponent(payload.date) + '&records=' + encodeURIComponent(JSON.stringify(payload.records));
+    fetch(saveUrl)
+      .then(function (res) { return res.text().then(function (t) { try { return JSON.parse(t); } catch (e) { return {}; } }); })
       .then(function (data) {
-        if (data.success !== false) {
+        if (data && data.success !== false) {
           msgEl.className = 'form-msg ok';
           msgEl.textContent = '已儲存，畫面將自動更新';
           textarea.value = '';
           load();
         } else {
           msgEl.className = 'form-msg err';
-          msgEl.textContent = data.message || '儲存失敗';
+          msgEl.textContent = (data && data.message) || '儲存失敗';
         }
       })
       .catch(function (err) {
         msgEl.className = 'form-msg err';
-        msgEl.textContent = err.message || '儲存失敗';
+        msgEl.textContent = err.message || '儲存失敗（請確認以網址開啟並已部署 Code.gs 新版本）';
       })
       .then(function () {
         btn.disabled = false;
