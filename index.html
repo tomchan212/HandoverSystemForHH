@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>交更系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>交更系統</h1>
+        <p class="subtitle">每 10 秒自動更新</p>
+        <input type="search" id="search" placeholder="搜尋院友姓名或房號" class="search-input" />
+        <div class="filters">
+          <select id="filter-social" class="filter-select">
+            <option value="">全部社工</option>
+          </select>
+          <select id="filter-floor" class="filter-select">
+            <option value="">全部樓層</option>
+          </select>
+          <select id="filter-status" class="filter-select">
+            <option value="">全部狀態</option>
+          </select>
+        </div>
+      </div>
+      <div id="resident-list" class="resident-list"></div>
+    </aside>
+    <main class="main">
+      <div id="loading" class="loading">載入中…</div>
+      <div id="error" class="error" hidden>
+        <p class="error-title">無法載入資料</p>
+        <p id="error-msg" class="error-msg"></p>
+        <p id="error-hint" class="error-hint"></p>
+        <div class="error-actions">
+          <button type="button" id="retry-btn" class="btn-retry">重試</button>
+          <button type="button" id="mock-btn" class="btn-mock">使用模擬資料</button>
+        </div>
+      </div>
+      <div id="content" class="content" hidden>
+        <div id="detail-empty" class="detail-empty">請在左側選擇一位院友查看詳情與新增交更</div>
+        <div id="detail-panel" class="detail-panel" hidden>
+          <div class="detail-header">
+            <h2 id="detail-title"></h2>
+            <p id="detail-meta" class="detail-meta"></p>
+          </div>
+          <section class="section">
+            <h3>最新交更</h3>
+            <div id="latest-handover" class="latest-box"></div>
+          </section>
+          <section class="section">
+            <h3>歷史記錄</h3>
+            <div id="timeline" class="timeline-box"></div>
+          </section>
+          <section class="section form-section">
+            <h3>新增今天交更</h3>
+            <p id="today-date" class="today-date"></p>
+            <textarea id="handover-text" rows="4" placeholder="輸入今日交更內容（可多行）"></textarea>
+            <p id="form-msg" class="form-msg"></p>
+            <button type="button" id="submit-btn" class="btn-submit">儲存交更</button>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
