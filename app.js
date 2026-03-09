@@ -2,7 +2,7 @@
   'use strict';
 
   // Google Apps Script 網頁應用程式網址（留空則使用模擬資料）
-  var API_BASE = 'https://script.google.com/macros/s/AKfycbxkUAfXPo3u1GBtO_w2uqSF4ZXmEncsrbGRzyEmv_TiICr4lftRYRVW5KXuGPXijVWC/exec';
+  var API_BASE = 'https://script.google.com/macros/s/AKfycbxff7gya1KQislZPU6qrOsBaLuhuP4p_fRYjTrOkgSJdu9zch4o9Hra_027uXuEfGWC/exec';
 
   var REFRESH_MS = 10000;
 
@@ -42,24 +42,37 @@
     }
     return fetch(API_BASE)
       .then(function (res) {
-        return res.json().then(function (data) {
+        return res.text().then(function (text) {
+          var data;
+          try {
+            data = JSON.parse(text);
+          } catch (parseErr) {
+            if (!res.ok) {
+              throw new Error('API 錯誤: ' + res.status);
+            }
+            throw new Error('伺服器回傳的不是 JSON。請確認：1) 網址為 .../macros/s/xxx/exec（中間沒有 /u/7/） 2) 部署存取權為「任何人」。');
+          }
           if (data && data.error) {
             throw new Error(data.error);
           }
           if (!res.ok) {
             throw new Error('API 錯誤: ' + res.status + (data && data.message ? ' ' + data.message : ''));
           }
+          if (!data.residents) {
+            data.residents = {};
+          }
+          if (!data.handovers || !data.handovers.rows) {
+            data.handovers = { rows: [] };
+          }
           return data;
-        }).catch(function (jsonErr) {
-          if (!res.ok) throw new Error('API 錯誤: ' + res.status);
-          throw jsonErr;
         });
       })
       .catch(function (err) {
-        if (err.message === 'Failed to fetch' || err.message === 'Load failed') {
-          err.message = '無法連線至伺服器。若直接開啟本機 HTML 檔案，請改為上傳至網頁空間或使用本地伺服器開啟。';
+        var msg = err.message;
+        if (msg === 'Failed to fetch' || msg === 'Load failed' || msg === 'NetworkError when attempting to fetch resource') {
+          msg = '無法連線至伺服器。請確認：1) 使用「網址」開啟（如 GitHub Pages），不要雙擊本機 HTML 2) 部署存取權為「任何人」。';
         }
-        throw err;
+        throw new Error(msg);
       });
   }
 
@@ -121,11 +134,11 @@
     if (state.error && !state.data) {
       errorEl.hidden = false;
       contentEl.hidden = true;
-      document.getElementById('error-msg').textContent = state.error;
+      document.getElementById('error-msg').textContent = state.error || '連線失敗，請重試或使用模擬資料。';
       var hintEl = document.getElementById('error-hint');
-      var isNetwork = /無法連線|Failed to fetch|Load failed|NetworkError/i.test(state.error);
-      hintEl.textContent = isNetwork ? '提示：可先按「使用模擬資料」操作介面，或將此網頁上傳至 GitHub Pages / 網路空間後再開啟。' : '';
-      hintEl.style.display = hintEl.textContent ? 'block' : 'none';
+      var isNetwork = /無法連線|Failed to fetch|Load failed|NetworkError|伺服器回傳/i.test(state.error);
+      hintEl.textContent = isNetwork ? '可先按「使用模擬資料」操作介面；要接真實資料請用 GitHub Pages 網址開啟，並確認 Apps Script 部署為「任何人」。' : '可先按「使用模擬資料」繼續操作。';
+      hintEl.style.display = 'block';
       document.getElementById('mock-btn').style.display = 'block';
       return;
     }
