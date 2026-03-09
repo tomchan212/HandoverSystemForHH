@@ -117,36 +117,21 @@
 
   function render() {
     var loadingEl = document.getElementById('loading');
-    var errorEl = document.getElementById('error');
     var contentEl = document.getElementById('content');
     var listEl = document.getElementById('resident-list');
 
     if (state.loading && !state.data) {
       loadingEl.style.display = 'flex';
-      errorEl.hidden = true;
       contentEl.hidden = true;
       return;
     }
 
     loadingEl.style.display = 'none';
-
-    if (state.error && !state.data) {
-      errorEl.hidden = false;
-      contentEl.hidden = true;
-      document.getElementById('error-msg').textContent = state.error || '連線失敗，請重試或使用模擬資料。';
-      var hintEl = document.getElementById('error-hint');
-      var isNetwork = /無法連線|Failed to fetch|Load failed|NetworkError|伺服器回傳/i.test(state.error);
-      hintEl.textContent = isNetwork ? '可先按「使用模擬資料」操作介面；要接真實資料請用 GitHub Pages 網址開啟，並確認 Apps Script 部署為「任何人」。' : '可先按「使用模擬資料」繼續操作。';
-      hintEl.style.display = 'block';
-      document.getElementById('mock-btn').style.display = 'block';
-      return;
-    }
-
-    errorEl.hidden = true;
     contentEl.hidden = false;
 
-    var residents = state.data.residents || {};
-    var handoverRows = state.data.handovers && state.data.handovers.rows ? state.data.handovers.rows : [];
+    var displayData = state.data || { residents: {}, handovers: { rows: [] } };
+    var residents = displayData.residents || {};
+    var handoverRows = displayData.handovers && displayData.handovers.rows ? displayData.handovers.rows : [];
     var latestRecords = handoverRows[0] ? handoverRows[0].records : {};
     var filteredIds = getFilteredIds();
 
@@ -320,17 +305,6 @@
     document.getElementById('filter-status').addEventListener('change', function () {
       state.filterStatus = this.value;
       render();
-    });
-    document.getElementById('retry-btn').addEventListener('click', function () {
-      state.loading = true;
-      state.error = null;
-      state.useMock = false;
-      load();
-    });
-    document.getElementById('mock-btn').addEventListener('click', function () {
-      state.error = null;
-      state.useMock = true;
-      load();
     });
     document.getElementById('submit-btn').addEventListener('click', onSubmit);
   }
